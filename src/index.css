@@ -1,0 +1,282 @@
+@import "tailwindcss";
+@import "@fontsource-variable/quicksand/wght.css";
+@theme {
+  /* Colors */
+  --color-sage: #7d8c5a;
+  --color-sage-light: #9aad72;
+  --color-sage-dark: #5e6b40;
+  --color-cream: #fefae8;
+  --color-cream-dim: #f5f0d8;
+  --color-charcoal: #0d0f1a;
+  --color-charcoal-soft: #1e2130;
+  --color-page: #eee9e0;
+  --color-surface: #e8e3d8;
+  --color-surface-raised: #dedad0;
+  --color-border: #d4cebc;
+
+  /* Semantic */
+  --color-bg: var(--color-page);
+  --color-card: var(--color-surface);
+  --color-card-hover: var(--color-surface-raised);
+  --color-text: var(--color-charcoal);
+  --color-text-muted: #5a5748;
+  --color-text-subtle: #8a8478;
+  --color-accent: var(--color-sage);
+  --color-accent-hover: var(--color-sage-dark);
+
+  /* Typography */
+  --font-sans: "DM Sans", "Helvetica Neue", sans-serif;
+  --font-serif: "DM Serif Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-logo: "Quicksand Variable", sans-serif;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:
+    0 1px 3px rgba(13, 15, 26, 0.06), 0 1px 2px rgba(13, 15, 26, 0.04);
+  --shadow-md:
+    0 4px 12px rgba(13, 15, 26, 0.08), 0 2px 6px rgba(13, 15, 26, 0.05);
+  --shadow-lg:
+    0 8px 24px rgba(13, 15, 26, 0.1), 0 4px 10px rgba(13, 15, 26, 0.06);
+  --shadow-xl:
+    0 16px 40px rgba(13, 15, 26, 0.12), 0 6px 16px rgba(13, 15, 26, 0.07);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-serif);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+
+  p {
+    line-height: 1.65;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+}
+
+/* ── Components ───────────────────────────────────────────── */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all var(--duration-fast) var(--ease-default);
+  }
+
+  .btn-primary {
+    background-color: var(--color-accent);
+    color: var(--color-cream);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-accent-hover);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-card);
+  }
+
+  .card {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-normal) var(--ease-default);
+  }
+  .card:hover {
+    background-color: var(--color-card-hover);
+    box-shadow: var(--shadow-md);
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--duration-fast) var(--ease-default);
+  }
+  .input:focus {
+    border-color: var(--color-accent);
+  }
+  .input::placeholder {
+    color: var(--color-text-subtle);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+  }
+
+  .section {
+    padding-block: 4rem;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin-block: 1.5rem;
+  }
+}
+
+/* ── Utilities ────────────────────────────────────────────── */
+@layer utilities {
+  /* Colors — ready to use */
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .text-muted {
+    color: var(--color-text-muted);
+  }
+  .text-subtle {
+    color: var(--color-text-subtle);
+  }
+  .text-cream {
+    color: var(--color-cream);
+  }
+  .bg-page {
+    background-color: var(--color-bg);
+  }
+  .bg-card {
+    background-color: var(--color-card);
+  }
+  .bg-surface {
+    background-color: var(--color-surface);
+  }
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .bg-sage-light {
+    background-color: var(--color-sage-light);
+  }
+  .bg-charcoal {
+    background-color: var(--color-charcoal);
+  }
+  .border-default {
+    border: 1px solid var(--color-border);
+  }
+
+  /* Typography */
+  .font-sans {
+    font-family: var(--font-sans);
+  }
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Shadows */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  .shadow-xl {
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* Radius */
+  .rounded-sm {
+    border-radius: var(--radius-sm);
+  }
+  .rounded-md {
+    border-radius: var(--radius-md);
+  }
+  .rounded-lg {
+    border-radius: var(--radius-lg);
+  }
+  .rounded-xl {
+    border-radius: var(--radius-xl);
+  }
+  .rounded-2xl {
+    border-radius: var(--radius-2xl);
+  }
+  .rounded-full {
+    border-radius: var(--radius-full);
+  }
+
+  /* Motion */
+  .transition-fast {
+    transition: all var(--duration-fast) var(--ease-default);
+  }
+  .transition-normal {
+    transition: all var(--duration-normal) var(--ease-default);
+  }
+}

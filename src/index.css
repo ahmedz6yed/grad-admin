@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@import "@fontsource-variable/quicksand/wght.css";
+@import "@fontsource/quicksand/index.css";
+
 @theme {
   /* Colors */
   --color-sage: #7d8c5a;

@@ -25,6 +25,8 @@ import Step2 from "./features/createAcc/Step2";
 import Step3 from "./features/createAcc/Step3";
 import Step4 from "./features/createAcc/Step4";
 import Step5 from "./features/createAcc/Step5";
+import Categories from "./pages/dashboard/Categories";
+import Tasks from "./pages/dashboard/Tasks";
 
 const router = createBrowserRouter([
   {
@@ -78,7 +80,14 @@ const router = createBrowserRouter([
           { path: "users", element: <Users /> },
           { path: "reports", element: <Reports /> },
           { path: "verification-audit", element: <VerificationAudit /> },
-          { path: "marketplace-control", element: <MarketplaceControl /> },
+          {
+            path: "marketplace-control",
+            element: <MarketplaceControl />,
+            children: [
+              { index: true, element: <Tasks /> },
+              { path: "categories", element: <Categories /> },
+            ],
+          },
           { path: "system-logs", element: <SystemLogs /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],

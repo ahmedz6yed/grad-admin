@@ -1,7 +1,7 @@
 export default function PageHeader({ title, subtitle }) {
   return (
-    <header className="mb-8  pb-8 transition-opacity duration-[var(--duration-normal)] ease-[var(--ease-default)]">
-      <h1 className="font-serif text-3xl font-normal tracking-tight text-[var(--color-text)] sm:text-4xl">
+    <header className="mb-8 pb-8 transition-opacity duration-[var(--duration-normal)] ease-[var(--ease-default)] border-b border-white/40">
+      <h1 className="font-josefin text-4xl font-bold tracking-tight text-charcoal sm:text-5xl">
         {title}
       </h1>
       {subtitle ? (

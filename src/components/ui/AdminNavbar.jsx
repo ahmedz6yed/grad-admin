@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Bell, Search } from 'lucide-react';
-import Logo from './Logo';
-import { DASHBOARD_NAV } from '../../constants/dashboardNav';
+import { useState, useEffect } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { Bell } from "lucide-react";
+import Logo from "./Logo";
+import { DASHBOARD_NAV } from "../../constants/dashboardNav";
 
 const navLinkClass = ({ isActive }) =>
   [
-    'relative rounded-[10px] px-4 py-2 text-[0.9rem] font-semibold font-sans transition-all duration-300 ease-out xl:px-5',
+    "relative rounded-[10px] px-4 py-2 text-[0.9rem] font-semibold font-sans transition-all duration-300 ease-out xl:px-5",
     isActive
-      ? 'bg-sage text-cream shadow-md shadow-sage/20 border border-sage-light/20'
-      : 'text-text-muted hover:bg-white/50 hover:text-charcoal border border-transparent hover:shadow-sm',
-  ].join(' ');
+      ? "bg-sage text-cream shadow-md shadow-sage/20 border border-sage-light/20"
+      : "text-text-muted hover:bg-white/50 hover:text-charcoal border border-transparent hover:shadow-sm",
+  ].join(" ");
 
 export default function AdminNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -20,23 +20,22 @@ export default function AdminNavbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const initial = 'A';
+  const initial = "A";
 
   return (
-    <header 
-      className={`fixed z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[85rem] ${
-        scrolled 
-          ? 'top-4 rounded-2xl border border-white/60 bg-cream-dim/70 shadow-[0_8px_30px_rgb(13,15,26,0.06)] backdrop-blur-2xl' 
-          : 'top-6 rounded-[1.25rem] border border-white/40 bg-cream/50 shadow-[0_4px_20px_rgb(13,15,26,0.03)] backdrop-blur-xl'
+    <header
+      className={`fixed z-20 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[85rem] ${
+        scrolled
+          ? "top-4 rounded-2xl border border-white/60 bg-cream-dim/70 shadow-[0_8px_30px_rgb(13,15,26,0.06)] backdrop-blur-2xl"
+          : "top-6 rounded-[1.25rem] border border-white/40 bg-cream/50 shadow-[0_4px_20px_rgb(13,15,26,0.03)] backdrop-blur-xl"
       }`}
     >
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
-          
           {/* Logo Section */}
           <div className="flex items-center shrink-0">
             <Link
@@ -68,14 +67,6 @@ export default function AdminNavbar() {
 
           {/* Actions Section */}
           <div className="flex items-center justify-end gap-3 shrink-0">
-            {/* Search */}
-            <button
-              type="button"
-              className="hidden sm:flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-xl border border-white/60 bg-white/40 text-charcoal/70 transition-all duration-300 hover:bg-white/80 hover:text-charcoal hover:shadow-sm hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 ring-sage/50"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" strokeWidth={2} />
-            </button>
 
             {/* Notifications */}
             <button
@@ -105,9 +96,15 @@ export default function AdminNavbar() {
               onClick={() => setMobileOpen((o) => !o)}
             >
               <div className="relative w-5 h-5 flex items-center justify-center">
-                <span className={`absolute h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ${mobileOpen ? 'rotate-45' : '-translate-y-1.5'}`} />
-                <span className={`absolute h-0.5 rounded-full bg-current transform transition-all duration-300 ${mobileOpen ? 'w-0 opacity-0' : 'w-5 opacity-100'}`} />
-                <span className={`absolute h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ${mobileOpen ? '-rotate-45' : 'translate-y-1.5'}`} />
+                <span
+                  className={`absolute h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ${mobileOpen ? "rotate-45" : "-translate-y-1.5"}`}
+                />
+                <span
+                  className={`absolute h-0.5 rounded-full bg-current transform transition-all duration-300 ${mobileOpen ? "w-0 opacity-0" : "w-5 opacity-100"}`}
+                />
+                <span
+                  className={`absolute h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ${mobileOpen ? "-rotate-45" : "translate-y-1.5"}`}
+                />
               </div>
             </button>
           </div>
@@ -117,7 +114,9 @@ export default function AdminNavbar() {
       {/* Mobile Navigation Dropdown */}
       <div
         className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:hidden ${
-          mobileOpen ? 'max-h-[28rem] opacity-100 border-t border-white/30' : 'max-h-0 opacity-0'
+          mobileOpen
+            ? "max-h-[28rem] opacity-100 border-t border-white/30"
+            : "max-h-0 opacity-0"
         }`}
       >
         <nav className="flex flex-col gap-1 p-4 bg-cream/40 backdrop-blur-xl rounded-b-2xl">
@@ -129,11 +128,11 @@ export default function AdminNavbar() {
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 [
-                  'rounded-xl px-4 py-3 text-[0.95rem] font-semibold transition-all duration-300',
+                  "rounded-xl px-4 py-3 text-[0.95rem] font-semibold transition-all duration-300",
                   isActive
-                    ? 'bg-sage text-cream shadow-md shadow-sage/20 border border-sage-light/20'
-                    : 'text-text-muted hover:bg-white/70 hover:text-charcoal border border-transparent',
-                ].join(' ')
+                    ? "bg-sage text-cream shadow-md shadow-sage/20 border border-sage-light/20"
+                    : "text-text-muted hover:bg-white/70 hover:text-charcoal border border-transparent",
+                ].join(" ")
               }
             >
               {item.label}

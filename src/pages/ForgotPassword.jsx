@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router-dom';
-import { Mail, ArrowLeft, ArrowRight, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, ArrowRight, ArrowLeft, ShieldCheck, Loader2, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 import { useForgotPassword, extractError } from '../hooks/useAuthMutations';
 import Logo from '../components/ui/Logo';
 
-const schema = z.object({
+// ── Schemas ──────────────────────────────────────────────────
+const emailSchema = z.object({
   email: z
     .string()
     .trim()
@@ -16,6 +18,7 @@ const schema = z.object({
     .max(254, 'Email must be at most 254 characters'),
 });
 
+// ── Reusable form field ──────────────────────────────────────
 const FormInput = ({ label, id, error, icon: Icon, children }) => (
   <div className="flex flex-col gap-2 group">
     <label
@@ -41,28 +44,33 @@ const FormInput = ({ label, id, error, icon: Icon, children }) => (
   </div>
 );
 
-const ForgotPassword = () => {
-  const [rootError, setRootError] = useState(null);
+// ── Main component ───────────────────────────────────────────
+export default function ForgotPassword() {
+  const navigate = useNavigate();
+  const forgotPw = useForgotPassword();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(schema),
+  const emailForm = useForm({
+    resolver: zodResolver(emailSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
   });
 
-  const { mutate: requestReset, isPending } = useForgotPassword();
-
-  const onSubmit = (data) => {
-    setRootError(null);
-    requestReset(data.email, {
+  // ── Submit email ───────────────────────────────────
+  const onEmailSubmit = (data) => {
+    forgotPw.mutate(data.email, {
+      onSuccess: () => {
+        toast.success('Check your email for a 6-digit OTP');
+        navigate('/verify-otp', { state: { email: data.email } });
+      },
       onError: (err) => {
-        setRootError(
-          extractError(err, 'Could not request a password reset. Please try again.')
-        );
+        const msg = extractError(err, 'Something went wrong');
+        if (err?.response?.status === 403) {
+          toast.error('Please verify your email before requesting a password reset');
+        } else if (err?.response?.status === 429) {
+          toast.error(msg || 'Too many requests. Please wait before trying again.');
+        } else {
+          toast.error(msg);
+        }
       },
     });
   };
@@ -76,76 +84,78 @@ const ForgotPassword = () => {
       </div>
 
       <main className="flex-1 flex items-center justify-center p-6 pb-24">
-        <div className="w-full max-w-[400px] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
-          <div className="mb-12">
-            <h2 className="text-4xl font-black text-charcoal tracking-tight mb-4">Reset access</h2>
-            <p className="text-text-muted font-medium leading-relaxed">
-              Enter the email for your account. If it exists and is verified, we will send a one-time
-              code. For security, the result is the same whether or not the address is registered.
-            </p>
-            <p className="mt-3 text-[12px] text-text-subtle leading-relaxed">
-              You can request a new code once every 60 seconds per email.
+        <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+          <div className="mb-10">
+            <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+              <KeyRound className="w-5 h-5 text-accent" />
+            </div>
+            <h2 className="text-3xl font-black text-charcoal tracking-tight mb-3">
+              Forgot Password
+            </h2>
+            <p className="text-text-muted font-medium leading-relaxed text-sm">
+              Enter the email linked to your{' '}
+              <span className="text-accent font-bold">FixPay</span> account.
+              We'll send a 6-digit code to reset your password.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
-            {rootError && (
-              <div
-                role="alert"
-                className="flex gap-3 rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-[13px] font-medium text-red-800 shadow-sm"
-              >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden />
-                <p className="leading-snug">{rootError}</p>
-              </div>
-            )}
-
-            <FormInput label="Account email" id="email" error={errors.email} icon={Mail}>
+          <form
+            onSubmit={emailForm.handleSubmit(onEmailSubmit)}
+            className="space-y-8"
+            noValidate
+          >
+            <FormInput
+              label="Account Email"
+              id="fp-email"
+              error={emailForm.formState.errors.email}
+              icon={Mail}
+            >
               <input
-                id="email"
+                id="fp-email"
                 type="email"
                 autoComplete="email"
-                {...register('email', {
-                  onChange: () => setRootError(null),
-                })}
+                autoFocus
+                {...emailForm.register('email')}
                 className={`w-full h-12 bg-surface border rounded-xl pl-12 pr-4 text-charcoal placeholder:text-text-subtle/50 focus:outline-none focus:ring-4 focus:ring-accent/10 transition-all font-medium shadow-sm ${
-                  errors.email
+                  emailForm.formState.errors.email
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15'
                     : 'border-border focus:border-accent'
                 }`}
-                placeholder="admin@fixpay.io"
+                placeholder="you@example.com"
               />
             </FormInput>
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={forgotPw.isPending}
               className="group cursor-pointer relative w-full h-12 bg-accent hover:bg-accent-hover text-cream font-bold uppercase tracking-widest text-[10px] rounded-xl shadow-xl shadow-accent/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
             >
               <div className="absolute inset-0 bg-charcoal translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-10" />
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {isPending ? (
+                {forgotPw.isPending ? (
                   <>
                     <Loader2 className="w-3 h-3 animate-spin" />
                     Sending…
                   </>
                 ) : (
                   <>
-                    Send reset code <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    Send OTP{' '}
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </span>
             </button>
-
-            <p className="text-center text-[12px] text-text-muted">
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-1.5 font-bold text-accent hover:underline"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
-                Back to sign in
-              </Link>
-            </p>
           </form>
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-text-subtle hover:text-accent transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back to Login
+            </Link>
+          </div>
 
           <div className="mt-16 pt-8 border-t border-border/50 flex items-center justify-between">
             <div className="flex gap-6 text-[9px] font-bold uppercase tracking-widest text-text-subtle">
@@ -164,6 +174,4 @@ const ForgotPassword = () => {
       </main>
     </div>
   );
-};
-
-export default ForgotPassword;
+}

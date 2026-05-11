@@ -539,16 +539,16 @@ Submit identity verification images (ID & live selfie) for AI verification.
 
 ```js
 const formData = new FormData();
-formData.append('id_image', fileInput.files[0]); // Front + back of ID
-formData.append('live_image', fileInput.files[1]); // Live selfie
+formData.append("id_image", fileInput.files[0]); // Front + back of ID
+formData.append("live_image", fileInput.files[1]); // Live selfie
 ```
 
 **Field Details:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id_image` | File (image) | Yes | Clear photo of government ID |
-| `live_image` | File (image) | Yes | Live selfie for liveness detection |
+| Field        | Type         | Required | Description                        |
+| ------------ | ------------ | -------- | ---------------------------------- |
+| `id_image`   | File (image) | Yes      | Clear photo of government ID       |
+| `live_image` | File (image) | Yes      | Live selfie for liveness detection |
 
 **File Requirements:**
 
@@ -622,7 +622,7 @@ Upload profile avatar image (replace existing).
 
 ```js
 const formData = new FormData();
-formData.append('file', fileInput.files[0]);
+formData.append("file", fileInput.files[0]);
 ```
 
 **Field:**
@@ -686,22 +686,22 @@ No body required
 ### Login & Store Token
 
 ```js
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = "http://localhost:3000/api";
 
 // Login
 const loginUser = async (email, password) => {
   const response = await axios.post(`${API_BASE}/user/login`, {
     email,
-    password
+    password,
   });
 
   const { token, user } = response.data.data || response.data;
 
   // Store token (example: localStorage)
-  localStorage.setItem('authToken', token);
-  localStorage.setItem('user', JSON.stringify(user));
+  localStorage.setItem("authToken", token);
+  localStorage.setItem("user", JSON.stringify(user));
 
   return { token, user };
 };
@@ -710,17 +710,17 @@ const loginUser = async (email, password) => {
 ### Authenticated Request
 
 ```js
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = "http://localhost:3000/api";
 
 const getProfile = async () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
 
   const response = await axios.get(`${API_BASE}/user/profile`, {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return response.data;
@@ -732,7 +732,7 @@ const getProfile = async () => {
 ```js
 const googleLogin = async (googleIdToken) => {
   const response = await axios.post(`${API_BASE}/user/google`, {
-    token: googleIdToken
+    token: googleIdToken,
   });
 
   const { token, needsPhoneNumber, needsSSn, user } = response.data;
@@ -749,18 +749,22 @@ const googleLogin = async (googleIdToken) => {
 
 ```js
 const verifyIdentity = async (idFile, selfieFile) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
   const formData = new FormData();
 
-  formData.append('id_image', idFile);
-  formData.append('live_image', selfieFile);
+  formData.append("id_image", idFile);
+  formData.append("live_image", selfieFile);
 
-  const response = await axios.post(`${API_BASE}/user/verify-identity`, formData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  const response = await axios.post(
+    `${API_BASE}/user/verify-identity`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
 
   return response.data;
 };
@@ -770,15 +774,15 @@ const verifyIdentity = async (idFile, selfieFile) => {
 
 ```js
 const uploadAvatar = async (file) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
 
   const response = await axios.post(`${API_BASE}/user/upload`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'multipart/form-data'
-    }
+      "Content-Type": "multipart/form-data",
+    },
   });
 
   return response.data.file; // updated user object with new avatar URL
@@ -789,16 +793,20 @@ const uploadAvatar = async (file) => {
 
 ```js
 const logoutUser = async () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
 
-  await axios.post(`${API_BASE}/user/logout`, {}, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  await axios.post(
+    `${API_BASE}/user/logout`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('user');
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("user");
 };
 ```
 
@@ -846,6 +854,11 @@ All errors follow this structure:
 - Email must be verified before password reset
 - `completeProfile` phone/SSN must be unique across users
 - `phoneNumber` is normalized: all non-digits stripped before save
----------------------------------------------------------------------------
+
+---
+
 TESTS
 login
+resend
+confirm
+google

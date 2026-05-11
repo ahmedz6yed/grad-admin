@@ -1,45 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import Logo from './Logo';
-// import { useAuthStore } from '../../store/authStore';
 import { DASHBOARD_NAV } from '../../constants/dashboardNav';
 
 const navLinkClass = ({ isActive }) =>
   [
-    'rounded-md px-2.5 py-2 text-sm font-medium font-sans transition-colors duration-[var(--duration-fast)] ease-[var(--ease-default)] xl:px-3',
+    'relative rounded-[10px] px-4 py-2 text-[0.9rem] font-semibold font-sans transition-all duration-300 ease-out xl:px-5',
     isActive
-      ? 'bg-[var(--color-sage-light)] text-[var(--color-text)] shadow-sm'
-      : 'text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]',
+      ? 'bg-sage text-cream shadow-md shadow-sage/20 border border-sage-light/20'
+      : 'text-text-muted hover:bg-white/50 hover:text-charcoal border border-transparent hover:shadow-sm',
   ].join(' ');
 
 export default function AdminNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Disabled: read current user from store for avatar — re-enable when user shape / hydration is stable
-  // const user = useAuthStore((s) => s.user);
-  // const initial =
-  //   user?.name?.charAt(0)?.toUpperCase() ||
-  //   user?.email?.charAt(0)?.toUpperCase() ||
-  //   'A';
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const initial = 'A';
 
   return (
-    <header className="fixed top-3.5 right-4 left-4 z-50 border-b border-default bg-cream-dim shadow-sm backdrop-blur-md transition-shadow duration-(--duration-normal) rounded-2xl ease-(--ease-default) supports-backdrop-filter:bg-[color-mix(in_srgb,var(--color-card)_88%,transparent)] sm:right-6 sm:left-6 lg:right-8 lg:left-8">
-      <div className="container min-h-14">
-        <div className="flex h-14 min-h-14 items-center justify-between gap-2 sm:gap-3 lg:grid lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)] lg:items-center lg:gap-4 xl:gap-6">
-          <div className="flex min-w-0 shrink-0 items-center">
+    <header 
+      className={`fixed z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[85rem] ${
+        scrolled 
+          ? 'top-4 rounded-2xl border border-white/60 bg-cream-dim/70 shadow-[0_8px_30px_rgb(13,15,26,0.06)] backdrop-blur-2xl' 
+          : 'top-6 rounded-[1.25rem] border border-white/40 bg-cream/50 shadow-[0_4px_20px_rgb(13,15,26,0.03)] backdrop-blur-xl'
+      }`}
+    >
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
+          
+          {/* Logo Section */}
+          <div className="flex items-center shrink-0">
             <Link
               to="/dashboard"
-              className="rounded-lg outline-none ring-accent transition-opacity duration ease-(--ease-default) hover:opacity-90 focus-visible:ring-2"
+              className="group relative rounded-xl outline-none transition-all duration-300 focus-visible:ring-2 ring-sage/50"
               aria-label="Dashboard home"
             >
-              <Logo className="text-xl sm:text-2xl lg:text-[1.65rem]" />
+              <div className="absolute -inset-2 rounded-xl bg-white/0 transition-colors group-hover:bg-white/40" />
+              <Logo className="relative text-2xl lg:text-[1.75rem] text-charcoal font-black tracking-tight drop-shadow-sm" />
             </Link>
           </div>
 
+          {/* Desktop Navigation */}
           <nav
-            className="hidden min-w-0 justify-self-center lg:flex lg:max-w-[min(100%,52rem)] lg:flex-wrap lg:items-center lg:justify-center lg:gap-0.5 xl:max-w-[min(100%,60rem)] xl:gap-1"
+            className="hidden lg:flex items-center justify-center gap-1.5 p-1.5 rounded-2xl bg-white/30 border border-white/40 backdrop-blur-md shadow-[inset_0_1px_4px_rgba(255,255,255,0.6)]"
             aria-label="Main"
           >
             {DASHBOARD_NAV.map((item) => (
@@ -48,59 +60,67 @@ export default function AdminNavbar() {
                 to={item.to}
                 end={item.end}
                 className={navLinkClass}
-                onClick={() => setMobileOpen(false)}
               >
                 {item.label}
               </NavLink>
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
+          {/* Actions Section */}
+          <div className="flex items-center justify-end gap-3 shrink-0">
+            {/* Search */}
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-default bg-[var(--color-surface)] text-[var(--color-text-muted)] transition-all duration-[var(--duration-fast)] ease-[var(--ease-default)] hover:border-[var(--color-accent)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] lg:hidden"
-              aria-expanded={mobileOpen}
-              aria-controls="admin-mobile-nav"
-              onClick={() => setMobileOpen((o) => !o)}
+              className="hidden sm:flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-xl border border-white/60 bg-white/40 text-charcoal/70 transition-all duration-300 hover:bg-white/80 hover:text-charcoal hover:shadow-sm hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 ring-sage/50"
+              aria-label="Search"
             >
-              {mobileOpen ? (
-                <X className="h-5 w-5" aria-hidden />
-              ) : (
-                <Menu className="h-5 w-5" aria-hidden />
-              )}
-              <span className="sr-only">Toggle menu</span>
+              <Search className="h-5 w-5" strokeWidth={2} />
             </button>
 
+            {/* Notifications */}
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-default bg-(--color-surface) text-text-muted transition-all duration-(--duration-fast) ease-(--ease-default) hover:border-(--color-accent) hover:bg-(--color-card-hover) hover:text-(--color-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-accent)"
+              className="hidden sm:flex relative h-[2.75rem] w-[2.75rem] items-center justify-center rounded-xl border border-white/60 bg-white/40 text-charcoal/70 transition-all duration-300 hover:bg-white/80 hover:text-charcoal hover:shadow-sm hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 ring-sage/50"
               aria-label="Notifications"
             >
-              <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              <Bell className="h-5 w-5" strokeWidth={2} />
+              <span className="absolute top-[10px] right-[10px] h-2 w-2 rounded-full bg-[#e36a6a] border-2 border-cream shadow-sm" />
             </button>
 
+            {/* Profile Avatar */}
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-default bg-[var(--color-surface)] text-sm font-semibold text-[var(--color-text)] transition-all duration-[var(--duration-fast)] ease-[var(--ease-default)] hover:border-[var(--color-accent)] hover:bg-[var(--color-card-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              className="relative flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-xl border border-sage/40 bg-gradient-to-br from-sage to-sage-dark text-[0.95rem] font-bold text-cream shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-sage/20 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 ring-sage/50 ring-offset-2 ring-offset-cream/50"
               aria-label="Account menu"
             >
               {initial}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/10 to-transparent mix-blend-overlay" />
+            </button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              type="button"
+              className="flex lg:hidden h-11 w-11 items-center justify-center rounded-xl border border-white/60 bg-white/40 text-charcoal transition-all duration-300 active:scale-95 focus-visible:outline-none focus-visible:ring-2 ring-sage/50"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((o) => !o)}
+            >
+              <div className="relative w-5 h-5 flex items-center justify-center">
+                <span className={`absolute h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ${mobileOpen ? 'rotate-45' : '-translate-y-1.5'}`} />
+                <span className={`absolute h-0.5 rounded-full bg-current transform transition-all duration-300 ${mobileOpen ? 'w-0 opacity-0' : 'w-5 opacity-100'}`} />
+                <span className={`absolute h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ${mobileOpen ? '-rotate-45' : 'translate-y-1.5'}`} />
+              </div>
             </button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Navigation Dropdown */}
       <div
-        id="admin-mobile-nav"
-        className={[
-          'overflow-hidden border-t border-default bg-[var(--color-card)] transition-[max-height,opacity] duration-[var(--duration-normal)] ease-[var(--ease-default)] lg:hidden',
-          mobileOpen ? 'max-h-[28rem] opacity-100' : 'max-h-0 border-t-transparent opacity-0',
-        ].join(' ')}
+        className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:hidden ${
+          mobileOpen ? 'max-h-[28rem] opacity-100 border-t border-white/30' : 'max-h-0 opacity-0'
+        }`}
       >
-        <nav
-          className="container flex flex-col gap-0.5 py-3"
-          aria-label="Mobile main"
-        >
+        <nav className="flex flex-col gap-1 p-4 bg-cream/40 backdrop-blur-xl rounded-b-2xl">
           {DASHBOARD_NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -109,10 +129,10 @@ export default function AdminNavbar() {
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 [
-                  'rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-[var(--duration-fast)] ease-[var(--ease-default)]',
+                  'rounded-xl px-4 py-3 text-[0.95rem] font-semibold transition-all duration-300',
                   isActive
-                    ? 'bg-[var(--color-surface-raised)] text-[var(--color-text)]'
-                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]',
+                    ? 'bg-sage text-cream shadow-md shadow-sage/20 border border-sage-light/20'
+                    : 'text-text-muted hover:bg-white/70 hover:text-charcoal border border-transparent',
                 ].join(' ')
               }
             >

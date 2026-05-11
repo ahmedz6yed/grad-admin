@@ -1,6 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
 import {
   registerUser,
   confirmEmail,
@@ -9,16 +10,17 @@ import {
   loginUser,
   googleLogin,
   completeProfile,
-  forgotPassword,
-  resetPassword,
   logoutUser,
-} from '../api/auth.api';
+  forgotPassword,
+  resendResetPasswordOtp,
+  resetPassword,
+} from "../api/auth.api";
 
 // Globally unpack potential backend validation arrays to provide explicitly clear UI toasting natively!
 export const extractError = (error, fallback) => {
   if (!error?.response) {
-    if (error?.code === 'ERR_NETWORK') {
-      return 'Unable to reach the server. Check your connection and try again.';
+    if (error?.code === "ERR_NETWORK") {
+      return "Unable to reach the server. Check your connection and try again.";
     }
     return fallback;
   }
@@ -35,10 +37,10 @@ export const extractError = (error, fallback) => {
   }
 
   // Standard nested message mappings strings
-  if (typeof data.message === 'string') {
+  if (typeof data.message === "string") {
     return data.message;
   }
-  if (typeof data.error === 'string') {
+  if (typeof data.error === "string") {
     return data.error;
   }
 
@@ -60,8 +62,8 @@ export const parseLoginApiError = (error) => {
       const key = (Array.isArray(raw) ? raw[0] : raw)
         ?.toString()
         ?.toLowerCase()
-        ?.replace(/^\//, '');
-      if (key === 'email' || key === 'password') {
+        ?.replace(/^\//, "");
+      if (key === "email" || key === "password") {
         fieldErrors[key] = msg;
       }
     }
@@ -74,57 +76,83 @@ export const parseLoginApiError = (error) => {
   }
 
   const topLevel =
-    (typeof data?.message === 'string' && data.message) ||
-    (typeof data?.error === 'string' && data.error) ||
+    (typeof data?.message === "string" && data.message) ||
+    (typeof data?.error === "string" && data.error) ||
     null;
 
   let rootMessage = topLevel;
   if (!rootMessage && Object.keys(fieldErrors).length === 0) {
-    rootMessage = extractError(error, 'Login failed');
+    rootMessage = extractError(error, "Login failed");
   }
 
   return { fieldErrors, rootMessage };
 };
 
-export const useRegister = () => {
+export const useRegister = (options = {}) => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   return useMutation({
     mutationFn: registerUser,
-    onSuccess: (data) => {
+    onSuccess: (data, variables, context) => {
       const token = data?.token || data?.data?.token;
-      const user = data?.user || (data?.role ? data : data?.data?.user) || data?.data || data;
+      const user =
+        data?.user ||
+        (data?.role ? data : data?.data?.user) ||
+        data?.data ||
+        data;
 
       setAuth(token, user);
-      navigate('/verify-email');
+      if (options.onSuccess) {
+        options.onSuccess(data, variables, context);
+      } else {
+        navigate("/verify-email");
+      }
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      if (options.onError) {
+        options.onError(error, variables, context);
+      }
     },
   });
 };
 
-export const useConfirmEmail = () => {
+export const useConfirmEmail = (options = {}) => {
   const navigate = useNavigate();
 
   return useMutation({
     mutationFn: confirmEmail,
-    onSuccess: () => {
-      navigate('/verify-identity');
+    onSuccess: (data, variables, context) => {
+      if (options.onSuccess) {
+        options.onSuccess(data, variables, context);
+      } else {
+        navigate("/verify-identity");
+      }
     },
-    onError: (error) => {
-      extractError(error, 'Invalid OTP');
+    onError: (error, variables, context) => {
+      if (options.onError) {
+        options.onError(error, variables, context);
+      } else {
+        extractError(error, "Invalid OTP");
+      }
     },
   });
 };
 
-export const useResendOtp = () => {
+export const useResendOtp = (options = {}) => {
   return useMutation({
     mutationFn: resendOtp,
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
+      if (options.onSuccess) {
+        options.onSuccess(data, variables, context);
+      }
     },
-    onError: (error) => {
-      extractError(error, 'Could not resend OTP');
+    onError: (error, variables, context) => {
+      if (options.onError) {
+        options.onError(error, variables, context);
+      } else {
+        extractError(error, "Could not resend OTP");
+      }
     },
   });
 };
@@ -136,14 +164,14 @@ export const useVerifyIdentity = () => {
   return useMutation({
     mutationFn: verifyIdentity,
     onSuccess: () => {
-      if (user?.role === 'admin') {
-        navigate('/dashboard');
+      if (user?.role === "admin") {
+        navigate("/dashboard");
       } else {
-        navigate('/waiting');
+        navigate("/waiting");
       }
     },
     onError: (error) => {
-      extractError(error, 'Verification failed');
+      extractError(error, "Verification failed");
     },
   });
 };
@@ -157,12 +185,16 @@ export const useLogin = () => {
     onSuccess: (data) => {
       // Robustly extract token and user, regardless of backend wrapping
       const token = data?.token || data?.data?.token || data; // handle if data is just the token string
-      let user = data?.user || (data?.role ? data : data?.data?.user) || data?.data || (typeof data === 'object' ? data : {});
+      let user =
+        data?.user ||
+        (data?.role ? data : data?.data?.user) ||
+        data?.data ||
+        (typeof data === "object" ? data : {});
 
       // Resolve token from the body to get the role
-      if (typeof token === 'string' && token.split('.').length === 3) {
+      if (typeof token === "string" && token.split(".").length === 3) {
         try {
-          const decoded = JSON.parse(atob(token.split('.')[1]));
+          const decoded = JSON.parse(atob(token.split(".")[1]));
           user = { ...user, ...decoded };
         } catch (e) {
           console.error("Failed to decode token", e);
@@ -170,12 +202,13 @@ export const useLogin = () => {
       }
 
       setAuth(token, user);
-      
-      const role = typeof user?.role === 'string' ? user.role.toLowerCase() : '';
-      if (role === 'admin') {
-        navigate('/dashboard');
+
+      const role =
+        typeof user?.role === "string" ? user.role.toLowerCase() : "";
+      if (role === "admin") {
+        navigate("/dashboard");
       } else {
-        navigate('/waiting');
+        navigate("/waiting");
       }
     },
   });
@@ -189,11 +222,15 @@ export const useGoogleLogin = () => {
     mutationFn: googleLogin,
     onSuccess: (data) => {
       const token = data?.token || data?.data?.token || data;
-      let user = data?.user || (data?.role ? data : data?.data?.user) || data?.data || (typeof data === 'object' ? data : {});
+      let user =
+        data?.user ||
+        (data?.role ? data : data?.data?.user) ||
+        data?.data ||
+        (typeof data === "object" ? data : {});
 
-      if (typeof token === 'string' && token.split('.').length === 3) {
+      if (typeof token === "string" && token.split(".").length === 3) {
         try {
-          const decoded = JSON.parse(atob(token.split('.')[1]));
+          const decoded = JSON.parse(atob(token.split(".")[1]));
           user = { ...user, ...decoded };
         } catch (e) {
           console.error("Failed to decode token", e);
@@ -201,19 +238,21 @@ export const useGoogleLogin = () => {
       }
 
       setAuth(token, user);
-      
-      const role = typeof user?.role === 'string' ? user.role.toLowerCase() : '';
-      
+
+      const role =
+        typeof user?.role === "string" ? user.role.toLowerCase() : "";
+
       if (data?.needsPhoneNumber || data?.needsSSn) {
-        navigate('/complete-profile');
-      } else if (role === 'admin') {
-        navigate('/dashboard');
+        navigate("/complete-profile");
+      } else if (role === "admin") {
+        navigate("/dashboard");
       } else {
-        navigate('/waiting');
+        navigate("/waiting");
       }
     },
     onError: (error) => {
-      extractError(error, 'Google login failed');
+      const message = extractError(error, "Google login failed");
+      toast.error(message);
     },
   });
 };
@@ -228,36 +267,14 @@ export const useCompleteProfile = () => {
     onSuccess: (data) => {
       updateUser(data);
       const updatedUser = { ...user, ...data };
-      if (updatedUser?.role === 'admin') {
-        navigate('/dashboard');
+      if (updatedUser?.role === "admin") {
+        navigate("/dashboard");
       } else {
-        navigate('/waiting');
+        navigate("/waiting");
       }
     },
     onError: (error) => {
-      extractError(error, 'Failed to complete profile');
-    },
-  });
-};
-
-export const useForgotPassword = () => {
-  const navigate = useNavigate();
-
-  return useMutation({
-    mutationFn: forgotPassword,
-    onSuccess: (_data, email) => {
-      navigate('/reset-password', { state: { email } });
-    },
-  });
-};
-
-export const useResetPassword = () => {
-  const navigate = useNavigate();
-
-  return useMutation({
-    mutationFn: resetPassword,
-    onSuccess: () => {
-      navigate('/login');
+      extractError(error, "Failed to complete profile");
     },
   });
 };
@@ -268,14 +285,32 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: logoutUser,
-    onSuccess: () => {
-    },
+    onSuccess: () => {},
     onError: (error) => {
-      extractError(error, 'Logout failed');
+      extractError(error, "Logout failed");
     },
     onSettled: () => {
       clearAuth();
-      navigate('/login');
+      navigate("/login");
     },
+  });
+};
+
+// ── Password Reset Flow ──────────────────────────────────────
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: forgotPassword,
+  });
+};
+
+export const useResendResetOtp = () => {
+  return useMutation({
+    mutationFn: resendResetPasswordOtp,
+  });
+};
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: resetPassword,
   });
 };

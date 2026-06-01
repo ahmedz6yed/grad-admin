@@ -15,6 +15,7 @@ import Reports from "./pages/dashboard/Reports";
 import VerificationAudit from "./pages/dashboard/VerificationAudit";
 import MarketplaceControl from "./pages/dashboard/MarketplaceControl";
 import SystemLogs from "./pages/dashboard/SystemLogs";
+import Profile from "./pages/dashboard/Profile";
 import Waiting from "./pages/Waiting";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
@@ -89,6 +90,7 @@ const router = createBrowserRouter([
             ],
           },
           { path: "system-logs", element: <SystemLogs /> },
+          { path: "profile", element: <Profile /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],
       },

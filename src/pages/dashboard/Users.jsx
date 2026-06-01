@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
@@ -401,14 +402,39 @@ function PromoteModal({ user, open, onClose }) {
 export default function Users() {
   const { data: users = [], isLoading, isError, error } = useUsers();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // Filters
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const search = searchParams.get("search") || "";
+  const roleFilter = searchParams.get("role") || "all";
+  const statusFilter = searchParams.get("status") || "all";
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const page = parseInt(searchParams.get("page") || "1", 10) || 1;
+  const pageSize = parseInt(searchParams.get("pageSize") || "10", 10) || 10;
+
+  // High-performance search state (local to avoid input lag during routing)
+  const [localSearch, setLocalSearch] = useState(search);
+  const searchDebounceRef = useRef(null);
+
+  // Sync URL -> local if user uses browser back/forward buttons
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  const updateParams = useCallback((updates) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(updates).forEach(([k, v]) => {
+        if (v === null || v === undefined || v === "" || v === "all" || (k === "page" && v === 1) || (k === "pageSize" && v === 10)) {
+          next.delete(k);
+        } else {
+          next.set(k, String(v));
+        }
+      });
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Modals
   const [detailUser, setDetailUser] = useState(null);
@@ -440,19 +466,12 @@ export default function Users() {
     [filtered, safePage, pageSize],
   );
 
-  // Reset page on filter change
-  const updateSearch = useCallback((v) => {
-    setSearch(v);
-    setPage(1);
-  }, []);
-  const updateRole = useCallback((v) => {
-    setRoleFilter(v);
-    setPage(1);
-  }, []);
-  const updateStatus = useCallback((v) => {
-    setStatusFilter(v);
-    setPage(1);
-  }, []);
+  // Actions that update URL params
+  const updateSearch = useCallback((v) => updateParams({ search: v, page: 1 }), [updateParams]);
+  const updateRole = useCallback((v) => updateParams({ role: v, page: 1 }), [updateParams]);
+  const updateStatus = useCallback((v) => updateParams({ status: v, page: 1 }), [updateParams]);
+  const setPage = useCallback((p) => updateParams({ page: p }), [updateParams]);
+  const handlePageSizeChange = useCallback((s) => updateParams({ pageSize: s, page: 1 }), [updateParams]);
 
   return (
     <>
@@ -510,8 +529,15 @@ export default function Users() {
           </div>
           <input
             type="text"
-            value={search}
-            onChange={(e) => updateSearch(e.target.value)}
+            value={localSearch}
+            onChange={(e) => {
+              const val = e.target.value;
+              setLocalSearch(val);
+              if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+              searchDebounceRef.current = setTimeout(() => {
+                updateSearch(val);
+              }, 300);
+            }}
             placeholder="Search by name, email, or username…"
             className="w-full rounded-full border border-white/60 bg-white/50 py-3.5 pl-14 pr-6 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-text-subtle focus:border-sage/40 focus:bg-white/90 focus:shadow-[0_4px_20px_rgba(125,140,90,0.08)]"
           />
@@ -720,9 +746,7 @@ export default function Users() {
                                 >
                                   <Eye className="h-4 w-4" />
                                 </ActionBtn>
-                                {u.role !== "admin" &&
-                                  u.identityVerification?.status ===
-                                    "verified" && (
+                                {u.role !== "admin" && (
                                     <ActionBtn
                                       tip="Promote"
                                       onClick={() => setPromoteTarget(u)}
@@ -758,10 +782,7 @@ export default function Users() {
               pageSize={pageSize}
               pageSizes={PAGE_SIZES}
               onPageChange={setPage}
-              onPageSizeChange={(newSize) => {
-                setPageSize(newSize);
-                setPage(1);
-              }}
+              onPageSizeChange={handlePageSizeChange}
               itemName="user"
             />
           </>

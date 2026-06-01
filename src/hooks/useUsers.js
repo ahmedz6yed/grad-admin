@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as usersApi from '../api/users.api';
+import { uploadAvatar } from '../api/auth.api';
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -86,5 +87,44 @@ export const useReviewIdentity = () => {
       qc.invalidateQueries({ queryKey: userKeys.all });
     },
     onError: (err) => toast.error(extractError(err, 'Identity review failed')),
+  });
+};
+
+export const useUpdateProfile = (setErrors) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => usersApi.editUser(data),
+    onSuccess: (data, variables) => {
+      const userId = variables.id;
+      if (userId) {
+        qc.invalidateQueries({ queryKey: userKeys.detail(userId) });
+      }
+      qc.invalidateQueries({ queryKey: userKeys.list() });
+      
+      if (setErrors) setErrors({ userName: "", dob: "" });
+      toast.success("Identity Synchronization Complete", {
+        description: "Your administrative profile has been updated.",
+        style: { borderRadius: '16px' }
+      });
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || error.message;
+      if (message.toLowerCase().includes("username")) {
+        if (setErrors) setErrors(prev => ({ ...prev, userName: message }));
+        toast.error("Naming Conflict", { description: "This username is already claimed." });
+      } else {
+        toast.error("Update Disrupted", { description: message || "A system error occurred." });
+      }
+    }
+  });
+};
+
+export const useUpdateAvatar = () => {
+  return useMutation({
+    mutationFn: uploadAvatar,
+    onSuccess: () => {
+      toast.success("Visual ID Updated", { description: "Your profile image has been refreshed." });
+    },
+    onError: (error) => toast.error("Upload Failure", { description: error.message })
   });
 };

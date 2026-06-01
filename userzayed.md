@@ -857,8 +857,4 @@ All errors follow this structure:
 
 ---
 
-TESTS
-login
-resend
-confirm
-google
+logout

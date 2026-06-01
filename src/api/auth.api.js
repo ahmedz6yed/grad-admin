@@ -28,11 +28,7 @@ export const resendOtp = async () => {
 };
 
 export const verifyIdentity = async (formData) => {
-  const res = await axiosInstance.post("user/verify-identity", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const res = await axiosInstance.post("user/verify-identity", formData);
   return res.data;
 };
 
@@ -53,6 +49,13 @@ export const completeProfile = async (data) => {
 
 export const logoutUser = async () => {
   const res = await axiosInstance.post("user/logout");
+  return res.data;
+};
+
+export const uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await axiosInstance.post("user/upload", formData);
   return res.data;
 };
 

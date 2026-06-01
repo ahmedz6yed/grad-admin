@@ -39,3 +39,13 @@ export const reviewIdentity = async ({ id, action }) => {
   const res = await axiosInstance.patch(`user/review-identity/${id}`, { action });
   return res.data;
 };
+
+/**
+ * PATCH /api/user/:id — Edit user information
+ * @param {{ id: string, [key: string]: any }} payload
+ */
+export const editUser = async ({ id, ...data }) => {
+  console.log("Submitting payload to user API:", data);
+  const res = await axiosInstance.patch(`user/${id}`, data);
+  return res.data;
+};

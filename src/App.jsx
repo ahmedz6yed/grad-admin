@@ -28,6 +28,7 @@ import Step4 from "./features/createAcc/Step4";
 import Step5 from "./features/createAcc/Step5";
 import Categories from "./pages/dashboard/Categories";
 import Tasks from "./pages/dashboard/Tasks";
+import ResolveIssues from "./pages/dashboard/ResolveIssues";
 
 const router = createBrowserRouter([
   {
@@ -90,6 +91,7 @@ const router = createBrowserRouter([
             ],
           },
           { path: "system-logs", element: <SystemLogs /> },
+          { path: "resolve", element: <ResolveIssues /> },
           { path: "profile", element: <Profile /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],

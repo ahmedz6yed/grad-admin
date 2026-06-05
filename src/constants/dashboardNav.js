@@ -4,5 +4,6 @@ export const DASHBOARD_NAV = [
   { label: 'Reports', to: '/dashboard/reports' },
   { label: 'Verification Audit', to: '/dashboard/verification-audit' },
   { label: 'Marketplace Control', to: '/dashboard/marketplace-control' },
+  { label: 'Resolve Issues', to: '/dashboard/resolve' },
   { label: 'System Logs', to: '/dashboard/system-logs' },
 ];

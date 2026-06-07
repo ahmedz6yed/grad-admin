@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import {
   AreaChart,
   Area,
@@ -7,30 +6,33 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ComposedChart,
+  BarChart,
   Bar,
-  Line,
   PieChart,
   Pie,
   Cell,
-  RadialBarChart,
-  RadialBar,
   Legend
 } from 'recharts';
 import PageHeader from '../../components/ui/PageHeader';
 import ChartCard from '../../components/charts/ChartCard';
 import { useOverviewData, DURATION_OPTIONS } from '../../hooks/useOverviewData';
+import { useUsers } from '../../hooks/useUsers';
+import { useOpenTasks } from '../../hooks/useTasks';
 
 const COLORS = {
   sage: 'var(--color-sage)',
   sageLight: 'var(--color-sage-light)',
+  sageDark: 'var(--color-sage-dark)',
   charcoal: 'var(--color-charcoal)',
   muted: 'var(--color-text-muted)',
   bg: 'var(--color-surface)',
 };
 
-const PIE_COLORS = ['#7d8c5a', '#5e6b40', '#d97706', '#dc2626', '#8a8478'];
-const RADIAL_COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#64748b'];
+const VERIFICATION_COLORS = {
+  Verified: '#10b981',   // Emerald
+  Failed: '#ef4444',     // Red
+  Unverified: '#f59e0b'  // Amber
+};
 
 // Custom Tooltip for aesthetic consistency
 const CustomTooltip = ({ active, payload, label }) => {
@@ -60,10 +62,30 @@ export default function Overview() {
     durationValue,
     setDuration,
     userTrends,
-    userStatus,
-    tasksVsOffers,
     categoryWorkers,
   } = useOverviewData();
+
+  const { data: usersData, isLoading: usersLoading } = useUsers();
+  const { data: tasksData, isLoading: tasksLoading } = useOpenTasks(1, 5);
+
+  const usersList = Array.isArray(usersData) ? usersData : (usersData?.data?.users || usersData?.users || []);
+  
+  // Verification Data Calculation
+  const verificationCounts = { Verified: 0, Failed: 0, Unverified: 0 };
+  usersList.forEach(user => {
+    const status = user.identityVerification?.status?.toLowerCase();
+    if (status === 'verified') verificationCounts.Verified++;
+    else if (status === 'failed') verificationCounts.Failed++;
+    else verificationCounts.Unverified++;
+  });
+  
+  const verificationData = Object.entries(verificationCounts)
+    .map(([name, value]) => ({ name, value }))
+    .filter(item => item.value > 0);
+  const recentUsers = [...usersList].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+
+  const tasksList = tasksData?.tasks || tasksData?.data?.tasks || [];
+  const recentTasks = [...tasksList].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
 
   // Duration selector widget
   const DurationAction = (
@@ -143,17 +165,17 @@ export default function Overview() {
           )}
         </ChartCard>
 
-        {/* 2. Tasks vs Offers Composed Chart */}
+        {/* 2. Task Categories Bar Chart */}
         <ChartCard
-          title="Marketplace Traction"
-          subtitle="Open task budgets vs. offer volume (Top 10 tasks)"
+          title="Categories & Workers"
+          subtitle="Number of workers assigned per category"
           loading={isLoading}
           delay={0.2}
           className="min-h-[380px]"
         >
-          {tasksVsOffers.length > 0 ? (
+          {categoryWorkers && categoryWorkers.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
-              <ComposedChart data={tasksVsOffers} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+              <BarChart data={categoryWorkers} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                 <XAxis 
                   dataKey="name" 
@@ -165,61 +187,41 @@ export default function Overview() {
                   dy={10}
                 />
                 <YAxis 
-                  yAxisId="left" 
-                  tickLine={false} 
-                  axisLine={false} 
-                  tick={{ fill: COLORS.muted, fontSize: 12 }} 
-                />
-                <YAxis 
-                  yAxisId="right" 
-                  orientation="right" 
                   tickLine={false} 
                   axisLine={false} 
                   tick={{ fill: COLORS.muted, fontSize: 12 }} 
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar 
-                  yAxisId="left" 
-                  dataKey="budget" 
-                  name="Budget (EGP)" 
-                  barSize={20} 
-                  fill={COLORS.charcoal} 
+                  dataKey="count" 
+                  name="Workers" 
+                  barSize={30} 
+                  fill={COLORS.sageDark} 
                   radius={[4, 4, 0, 0]} 
                   animationDuration={1500}
                 />
-                <Line 
-                  yAxisId="right" 
-                  type="monotone" 
-                  dataKey="offers" 
-                  name="Offers Received" 
-                  stroke={COLORS.sageLight} 
-                  strokeWidth={3} 
-                  dot={{ r: 4, fill: COLORS.bg, strokeWidth: 2 }}
-                  activeDot={{ r: 6 }}
-                  animationDuration={1500}
-                />
-              </ComposedChart>
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex h-64 items-center justify-center text-text-muted">
-              Not enough task data.
+              Not enough category data.
             </div>
           )}
         </ChartCard>
 
-        {/* 3. User Status Pie Chart */}
+        {/* 3. Identity Verification Status */}
         <ChartCard
-          title="Account Status Distribution"
-          subtitle="Proportion of users by operational status"
-          loading={isLoading}
+          title="Identity Verification"
+          subtitle="Breakdown of user verification statuses"
+          loading={usersLoading}
           delay={0.3}
           className="min-h-[380px]"
         >
-          {userStatus.length > 0 ? (
+          {verificationData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
-                  data={userStatus}
+                  data={verificationData}
                   cx="50%"
                   cy="50%"
                   innerRadius={70}
@@ -229,8 +231,8 @@ export default function Overview() {
                   stroke="none"
                   animationDuration={1500}
                 >
-                  {userStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  {verificationData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={VERIFICATION_COLORS[entry.name]} />
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
@@ -244,59 +246,69 @@ export default function Overview() {
             </ResponsiveContainer>
           ) : (
             <div className="flex h-64 items-center justify-center text-text-muted">
-              No status data found.
+              No verification data found.
             </div>
           )}
         </ChartCard>
 
-        {/* 4. Category Workers Radial Chart */}
+        {/* 4. Recently Added Users */}
         <ChartCard
-          title="Workforce Distribution"
-          subtitle="Workers categorized by specialization"
-          loading={isLoading}
+          title="Recently Added Users"
+          subtitle="Newest registered members"
+          loading={usersLoading}
           delay={0.4}
-          className="lg:col-span-2 min-h-[420px]"
+          className="min-h-[380px]"
         >
-          {categoryWorkers.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
-              <RadialBarChart 
-                cx="50%" 
-                cy="50%" 
-                innerRadius="20%" 
-                outerRadius="90%" 
-                barSize={16} 
-                data={categoryWorkers.map((c, i) => ({ ...c, fill: RADIAL_COLORS[i % RADIAL_COLORS.length] }))}
-              >
-                <RadialBar
-                  minAngle={15}
-                  label={{ position: 'insideStart', fill: '#fff', fontSize: 11, fontWeight: 'bold' }}
-                  background={{ fill: 'rgba(0,0,0,0.03)' }}
-                  clockWise
-                  dataKey="count"
-                  cornerRadius={10}
-                  animationDuration={1500}
-                />
-                <Legend 
-                  iconSize={10} 
-                  width={150} 
-                  height={140} 
-                  layout="vertical" 
-                  verticalAlign="middle" 
-                  wrapperStyle={{
-                    top: '50%',
-                    right: 0,
-                    transform: 'translate(0, -50%)',
-                    lineHeight: '24px',
-                    fontSize: '12px',
-                    color: COLORS.charcoal
-                  }} 
-                />
-                <Tooltip content={<CustomTooltip />} />
-              </RadialBarChart>
-            </ResponsiveContainer>
+          {recentUsers.length > 0 ? (
+            <div className="flex flex-col gap-4 mt-2 max-h-[280px] overflow-y-auto pr-2">
+              {recentUsers.map(user => (
+                <div key={user._id} className="flex items-center gap-4 p-3 rounded-xl border border-black/5 bg-white/40 hover:bg-white/60 transition-colors">
+                  <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name?.first || 'U'}+${user.name?.last || 'U'}&background=random`} alt={user.userName} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                  <div className="flex-1 overflow-hidden">
+                    <h4 className="text-sm font-semibold text-charcoal truncate">{user.name?.first} {user.name?.last}</h4>
+                    <p className="text-xs text-text-muted truncate">@{user.userName} • {user.role}</p>
+                  </div>
+                  <div className="text-xs font-medium text-sage-dark bg-sage/10 px-2 py-1 rounded-md whitespace-nowrap">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="flex h-64 items-center justify-center text-text-muted">
-              No category workforce data available.
+              No recent users found.
+            </div>
+          )}
+        </ChartCard>
+
+        {/* 5. Recently Added Tasks */}
+        <ChartCard
+          title="Recently Added Tasks"
+          subtitle="Newest open tasks"
+          loading={tasksLoading}
+          delay={0.5}
+          className="min-h-[380px]"
+        >
+          {recentTasks.length > 0 ? (
+            <div className="flex flex-col gap-4 mt-2 max-h-[280px] overflow-y-auto pr-2">
+              {recentTasks.map(task => (
+                <div key={task._id} className="flex items-center gap-4 p-3 rounded-xl border border-black/5 bg-white/40 hover:bg-white/60 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-sage-light/20 flex shrink-0 items-center justify-center text-sage-dark font-bold text-lg shadow-sm">
+                    {task.title?.charAt(0)?.toUpperCase() || 'T'}
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <h4 className="text-sm font-semibold text-charcoal truncate">{task.title}</h4>
+                    <p className="text-xs text-text-muted truncate">{task.budget} EGP • {task.location}</p>
+                  </div>
+                  <div className="text-xs font-medium text-charcoal bg-black/5 px-2 py-1 rounded-md whitespace-nowrap">
+                    {new Date(task.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center text-text-muted">
+              No recent tasks found.
             </div>
           )}
         </ChartCard>

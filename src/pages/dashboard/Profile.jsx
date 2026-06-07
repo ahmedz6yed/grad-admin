@@ -148,15 +148,13 @@ export default function Profile() {
   const handleFileChange = useCallback((e) => {
     const file = e.target.files?.[0];
     if (file) {
-      uploadAvatar(file, {
-        onSuccess: (data) => {
-          const updatedUser = data?.file || data?.data || data;
-          updateUser(updatedUser);
-          setFormData(prev => ({ ...prev, avatarUrl: updatedUser.avatar }));
-        }
-      });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatarUrl: reader.result }));
+      };
+      reader.readAsDataURL(file);
     }
-  }, [uploadAvatar, updateUser]);
+  }, []);
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
@@ -255,7 +253,7 @@ export default function Profile() {
             <div className="relative bg-white/40 border border-white/60 backdrop-blur-3xl rounded-[2.5rem] p-8 flex flex-col items-center shadow-2xl shadow-charcoal/5 transition-transform">
               
               <div className="relative mb-6 group/avatar cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <div className="relative w-40 h-40 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/40 group-hover/avatar:-translate-y-1 transition-transform duration-300">
+                <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-2xl border-4 border-white/40 group-hover/avatar:-translate-y-1 transition-transform duration-300">
                   {formData.avatarUrl ? (
                     <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110" />
                   ) : (
@@ -270,6 +268,9 @@ export default function Profile() {
               </div>
 
               <div className="w-full space-y-3">
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-sage/20 border border-sage/50 hover:bg-sage/30 transition-all duration-300 text-[0.7rem] font-black uppercase tracking-wider text-sage-dark group/btn">
+                  <span className="flex items-center gap-2"><Camera className="w-3.5 h-3.5" /> Upload Local Image</span>
+                </button>
                 <button type="button" onClick={() => setShowAvatarInput(!showAvatarInput)} className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 hover:bg-white transition-all duration-300 text-[0.7rem] font-black uppercase tracking-wider text-charcoal/60 group/btn">
                   <span className="flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5" /> Avatar URL</span>
                   {showAvatarInput ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

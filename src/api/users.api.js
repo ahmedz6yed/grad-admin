@@ -14,6 +14,12 @@ export const fetchUserById = async (id) => {
   return res.data?.data ?? res.data;
 };
 
+/** GET /api/user/:id/ai-result — fetch AI verification result image */
+export const fetchAiResult = async (id) => {
+  const res = await axiosInstance.get(`user/${id}/ai-result`);
+  return res.data?.data ?? res.data;
+};
+
 // ── Mutations ────────────────────────────────────────────────
 
 /** PATCH /api/user/assign-admin/:id — promote to admin */

@@ -92,7 +92,7 @@ export default function AdminNavbar() {
             {/* Profile Avatar */}
             <Link
               to="/dashboard/profile"
-              className="group relative flex h-10 w-10 sm:h-11 sm:w-11 xl:h-12 xl:w-12 items-center justify-center overflow-hidden rounded-xl border-2 border-sage/30 bg-gradient-to-br from-sage to-sage-dark text-[1rem] font-black text-cream shadow-md transition-all duration-300 hover:shadow-xl hover:shadow-sage/20 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 ring-sage/50 ring-offset-2 ring-offset-cream/50"
+              className="group relative flex h-10 w-10 sm:h-11 sm:w-11 xl:h-12 xl:w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sage to-sage-dark text-[1rem] font-black text-cream shadow-md transition-all duration-300 hover:shadow-xl hover:shadow-sage/20 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 ring-sage/50 ring-offset-2 ring-offset-cream/50"
               aria-label="Account menu"
             >
               {user?.avatar ? (
@@ -100,7 +100,7 @@ export default function AdminNavbar() {
               ) : (
                 <span className="relative z-10 drop-shadow-sm">{initial}</span>
               )}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </Link>
 
             {/* Mobile Menu Toggle */}

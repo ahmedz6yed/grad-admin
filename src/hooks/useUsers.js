@@ -20,9 +20,10 @@ const extractError = (error, fallback) => {
 // ── Query Keys ───────────────────────────────────────────────
 
 export const userKeys = {
-  all:    ['users'],
-  list:   ()   => [...userKeys.all, 'list'],
-  detail: (id) => [...userKeys.all, 'detail', id],
+  all:      ['users'],
+  list:     ()   => [...userKeys.all, 'list'],
+  detail:   (id) => [...userKeys.all, 'detail', id],
+  aiResult: (id) => [...userKeys.all, 'ai-result', id],
 };
 
 // ── Queries ──────────────────────────────────────────────────
@@ -47,6 +48,20 @@ export const useUserDetail = (id) => {
     queryKey: userKeys.detail(id),
     queryFn: () => usersApi.fetchUserById(id),
     enabled: !!id,
+  });
+};
+
+/** Fetch the AI-generated verification result image for a user. */
+export const useAiResult = (userId) => {
+  return useQuery({
+    queryKey: userKeys.aiResult(userId),
+    queryFn: () => usersApi.fetchAiResult(userId),
+    enabled: !!userId,
+    staleTime: 10 * 60 * 1000,
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
   });
 };
 

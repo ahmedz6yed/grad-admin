@@ -14,7 +14,8 @@ export const DURATION_OPTIONS = [
 
 export function useOverviewData() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const durationValue = searchParams.get('duration') || '30d';
+  const userDurationValue = searchParams.get('userDuration') || searchParams.get('duration') || '30d';
+  const taskDurationValue = searchParams.get('taskDuration') || searchParams.get('duration') || '30d';
 
   const { data: users = [], isLoading: isUsersLoading } = useUsers();
   // Fetch a larger page size to get meaningful data for the overview
@@ -26,7 +27,7 @@ export function useOverviewData() {
 
   // ── 1. User Trends (Area Chart) ──────────────────────────────
   const userTrends = useMemo(() => {
-    const option = DURATION_OPTIONS.find((o) => o.value === durationValue) || DURATION_OPTIONS[1];
+    const option = DURATION_OPTIONS.find((o) => o.value === userDurationValue) || DURATION_OPTIONS[1];
     const cutoffDate = dayjs().subtract(option.days, 'day');
 
     // Filter users within the selected duration
@@ -55,7 +56,39 @@ export function useOverviewData() {
     });
 
     return Array.from(dateMap.entries()).map(([date, count]) => ({ date, count }));
-  }, [users, durationValue]);
+  }, [users, userDurationValue]);
+
+  // ── 1.5 Task Trends (Line + Bar Chart) ───────────────────────
+  const taskTrends = useMemo(() => {
+    const option = DURATION_OPTIONS.find((o) => o.value === taskDurationValue) || DURATION_OPTIONS[1];
+    const cutoffDate = dayjs().subtract(option.days, 'day');
+
+    const filteredTasks = tasks.filter((task) => 
+      task.createdAt && dayjs(task.createdAt).isAfter(cutoffDate)
+    );
+
+    const formatStr = option.days <= 30 ? 'MMM DD' : 'MMM YYYY';
+    
+    const dateMap = new Map();
+    let current = cutoffDate;
+    while (current.isBefore(dayjs()) || current.isSame(dayjs(), 'day')) {
+      dateMap.set(current.format(formatStr), { count: 0, budget: 0 });
+      current = current.add(option.days <= 30 ? 1 : 15, 'day');
+    }
+
+    filteredTasks.forEach((task) => {
+      const dateKey = dayjs(task.createdAt).format(formatStr);
+      if (dateMap.has(dateKey)) {
+        const entry = dateMap.get(dateKey);
+        entry.count += 1;
+        entry.budget += (task.budget || 0);
+      } else {
+        dateMap.set(dateKey, { count: 1, budget: task.budget || 0 });
+      }
+    });
+
+    return Array.from(dateMap.entries()).map(([date, data]) => ({ date, count: data.count, budget: data.budget }));
+  }, [tasks, taskDurationValue]);
 
   // ── 2. User Status (Pie Chart) ────────────────────────────────
   const userStatus = useMemo(() => {
@@ -115,15 +148,28 @@ export function useOverviewData() {
       .sort((a, b) => b.count - a.count); // sort by count desc
   }, [users, categories]);
 
-  const setDuration = (val) => {
-    setSearchParams({ duration: val });
+  const setUserDuration = (val) => {
+    setSearchParams((prev) => {
+      prev.set('userDuration', val);
+      return prev;
+    });
+  };
+
+  const setTaskDuration = (val) => {
+    setSearchParams((prev) => {
+      prev.set('taskDuration', val);
+      return prev;
+    });
   };
 
   return {
     isLoading,
-    durationValue,
-    setDuration,
+    userDurationValue,
+    taskDurationValue,
+    setUserDuration,
+    setTaskDuration,
     userTrends,
+    taskTrends,
     userStatus,
     tasksVsOffers,
     categoryWorkers,

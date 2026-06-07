@@ -11,7 +11,9 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  ComposedChart,
+  Line
 } from 'recharts';
 import PageHeader from '../../components/ui/PageHeader';
 import ChartCard from '../../components/charts/ChartCard';
@@ -31,7 +33,7 @@ const COLORS = {
 const VERIFICATION_COLORS = {
   Verified: '#10b981',   // Emerald
   Failed: '#ef4444',     // Red
-  Unverified: '#f59e0b'  // Amber
+  Unverified: '#9ca3af'  // Gray
 };
 
 // Custom Tooltip for aesthetic consistency
@@ -59,9 +61,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function Overview() {
   const {
     isLoading,
-    durationValue,
-    setDuration,
+    userDurationValue,
+    taskDurationValue,
+    setUserDuration,
+    setTaskDuration,
     userTrends,
+    taskTrends,
     categoryWorkers,
   } = useOverviewData();
 
@@ -87,15 +92,34 @@ export default function Overview() {
   const tasksList = tasksData?.tasks || tasksData?.data?.tasks || [];
   const recentTasks = [...tasksList].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
 
-  // Duration selector widget
-  const DurationAction = (
+  // Duration selector widget for Users
+  const UserDurationAction = (
     <div className="flex items-center gap-1 rounded-full border border-border/40 bg-white/40 p-1 backdrop-blur-sm">
       {DURATION_OPTIONS.map((opt) => (
         <button
           key={opt.value}
-          onClick={() => setDuration(opt.value)}
+          onClick={() => setUserDuration(opt.value)}
           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-            durationValue === opt.value
+            userDurationValue === opt.value
+              ? 'bg-sage text-white shadow-sm'
+              : 'text-text-muted hover:bg-white/60 hover:text-charcoal'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  // Duration selector widget for Tasks
+  const TaskDurationAction = (
+    <div className="flex items-center gap-1 rounded-full border border-border/40 bg-white/40 p-1 backdrop-blur-sm">
+      {DURATION_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => setTaskDuration(opt.value)}
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+            taskDurationValue === opt.value
               ? 'bg-sage text-white shadow-sm'
               : 'text-text-muted hover:bg-white/60 hover:text-charcoal'
           }`}
@@ -118,7 +142,7 @@ export default function Overview() {
         <ChartCard
           title="User Registration Trends"
           subtitle="Growth trajectory of newly registered accounts"
-          action={DurationAction}
+          action={UserDurationAction}
           loading={isLoading}
           delay={0.1}
           className="lg:col-span-2 min-h-[400px]"
@@ -161,6 +185,75 @@ export default function Overview() {
           ) : (
             <div className="flex h-64 items-center justify-center text-text-muted">
               No data available for the selected duration.
+            </div>
+          )}
+        </ChartCard>
+
+        {/* 1.5 Task Growth & Budget Composed Chart - Spans full width */}
+        <ChartCard
+          title="Task Growth & Budget"
+          subtitle="Daily task volume and total budget over time"
+          action={TaskDurationAction}
+          loading={isLoading}
+          delay={0.15}
+          className="lg:col-span-2 min-h-[400px]"
+        >
+          {taskTrends && taskTrends.length > 0 ? (
+            <ResponsiveContainer width="100%" height={320}>
+              <ComposedChart data={taskTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis 
+                  dataKey="date" 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: COLORS.muted, fontSize: 12 }} 
+                  dy={10} 
+                />
+                <YAxis 
+                  yAxisId="left"
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: COLORS.muted, fontSize: 12 }} 
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: COLORS.muted, fontSize: 12 }} 
+                  tickFormatter={(val) => `${val} EGP`}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  verticalAlign="top" 
+                  height={36} 
+                  wrapperStyle={{ fontSize: '12px', color: COLORS.muted }}
+                />
+                <Bar 
+                  yAxisId="right"
+                  dataKey="budget" 
+                  name="Total Budget" 
+                  barSize={30} 
+                  fill={COLORS.sageLight} 
+                  radius={[4, 4, 0, 0]} 
+                  animationDuration={1500}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="count"
+                  name="New Tasks"
+                  stroke={COLORS.sageDark}
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: COLORS.sageDark, strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6 }}
+                  animationDuration={1500}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-64 items-center justify-center text-text-muted">
+              No task data available for the selected duration.
             </div>
           )}
         </ChartCard>

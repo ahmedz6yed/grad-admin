@@ -194,8 +194,6 @@ function ReviewPanel({ user, onDecision, isPending }) {
   const confidenceKey = (iv.confidence || "low").toLowerCase();
   const confidenceStyle =
     CONFIDENCE_COLORS[confidenceKey] || CONFIDENCE_COLORS.low;
-  const similarityPct =
-    iv.similarity != null ? Math.round(iv.similarity * 100) : null;
 
   return (
     <motion.div
@@ -497,7 +495,6 @@ export default function ManualVerification({
   );
 
   // ── Auth/permission error state ──
-  // (Detected from the review mutation or could be lifted from a parent)
   const authError =
     reviewMutation.error?.response?.status === 401 ||
     reviewMutation.error?.response?.status === 403;
